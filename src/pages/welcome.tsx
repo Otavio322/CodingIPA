@@ -8,7 +8,8 @@ export default function Welcome() {
       <h1>Bem-vindo ao Sistema IPA</h1>
 
       <button 
-        onClick={() => router.push("/Agricultores")}
+        // AQUI ESTÁ A MUDANÇA: Direto para o arquivo na pasta pages
+        onClick={() => router.push("/ProducaoSementes")}
         style={{
           padding: "10px 20px",
           marginTop: "20px",
@@ -19,7 +20,7 @@ export default function Welcome() {
           cursor: "pointer"
         }}
       >
-        Sementes Produziadas
+        Sementes Produzidas
       </button>
     </div>
   );

@@ -1,35 +1,39 @@
 import { useState } from 'react';
 import axios, { AxiosError } from 'axios';
-import { useRouter } from 'next/router'; // Importando useRouter
+import { useRouter } from 'next/router';
 import styles from '../styles/Login.module.css';
 
 export default function Login() {
   const [cpfCnpj, setCpfCnpj] = useState('');
   const [senha, setSenha] = useState('');
   const [error, setError] = useState('');
-  const router = useRouter(); // Declarando o router para navegação
+  const [isLoggedIn, setIsLoggedIn] = useState(false); // Estado para verificar se o login foi bem-sucedido
+  const router = useRouter();
 
+  // Função chamada ao enviar o formulário
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError(''); // Limpa erro antigo
+    setError(''); // Limpa erros anteriores
 
     try {
-      // Envia os dados para o login
+      // Envia dados para autenticação
       const { data } = await axios.post(
-        'http://localhost:8080/api/auth/login',
-        { cpfCnpj, senha },
+        'http://localhost:8080/api/auth/login', // Atualize a URL se necessário
+        { cpfCnpj, senha }, // Envia CPF/CNPJ e senha para autenticação
         { validateStatus: (status) => status < 500 }
       );
 
       // Se o login for bem-sucedido
       if (data.sucesso) {
-        // Redireciona para a página de boas-vindas ou dashboard
-        router.push(`/welcome?user=${encodeURIComponent(cpfCnpj)}`);
+        localStorage.setItem('jwt', data.token); // Salva o token no localStorage
+        setIsLoggedIn(true); // Atualiza o estado para exibir o botão
+        router.push(`/welcome?user=${encodeURIComponent(cpfCnpj)}`); // Redireciona para a página de boas-vindas
       } else {
-        // Caso o backend retorne sucesso=false
+        // Se falhar, exibe a mensagem de erro
         setError(data.mensagem);
       }
     } catch (err) {
+      // Lida com erros de conexão ou outros tipos de erro
       if (axios.isAxiosError(err)) {
         const axiosErr = err as AxiosError<{ mensagem: string }>;
         if (axiosErr.response?.data?.mensagem) {
@@ -43,9 +47,9 @@ export default function Login() {
     }
   };
 
+  // Função chamada ao clicar no botão para ir à página de Produção de Sementes
   const handleGoToProducoes = () => {
-    // Aqui você coloca o código para navegar para a página de "Produção de Sementes"
-    router.push("/producoes/producaosementes");
+    router.push('/producoes/producaosementes'); // Redireciona para a página de Produção de Sementes
   };
 
   return (
@@ -66,14 +70,16 @@ export default function Login() {
           onChange={(e) => setSenha(e.target.value)}
           required
         />
-        {error && <p className={styles.error}>{error}</p>}
+        {error && <p className={styles.error}>{error}</p>} {/* Exibe erro se houver */}
         <button type="submit">Entrar</button>
       </form>
 
-      {/* Botão para ir para a página de Produção de Sementes */}
-      <div>
-        <button onClick={handleGoToProducoes}>Gerenciar Produção de Sementes</button>
-      </div>
+      {/* Exibe o botão "Gerenciar Produção de Sementes" apenas após o login bem-sucedido */}
+      {isLoggedIn && (
+        <div>
+          <button onClick={handleGoToProducoes}>Gerenciar Produção de Sementes</button>
+        </div>
+      )}
     </div>
   );
 }
